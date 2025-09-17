@@ -7,19 +7,33 @@ const CLIENT_KEY = 'zQrntobRZgMVspU7J7lk728NEytCVkcJ90pfjSb9';
 const PARSE_BASE_URL = 'https://parseapi.back4app.com';
 const MENU_CLASS = 'MenuItem';
 
-const emptyForm = {
-  name: '',
-  description: '',
-  price: '',
-  category: '',
-  available: true,
+const weatherLocations = {
+  'Recife - PE': { latitude: -8.0432784, longitude: -35.0990265 },
+  'Olinda - PE': { latitude: -7.9965313, longitude: -34.8720278 },
+  'Jaboatão dos Guararapes - PE': { latitude: -8.145843, longitude: -35.1651605 },
 };
 
-const weatherLocations = {
-  'São Paulo, BR': { latitude: -23.5505, longitude: -46.6333 },
-  'Rio de Janeiro, BR': { latitude: -22.9068, longitude: -43.1729 },
-  'Belo Horizonte, BR': { latitude: -19.9167, longitude: -43.9345 },
-};
+const locationOptions = Object.keys(weatherLocations);
+const defaultCity = locationOptions[0];
+
+const categoryOptions = [
+  'Entrada',
+  'Prato principal',
+  'Sobremesa',
+  'Bebida',
+  'Promoção',
+];
+
+function createEmptyForm(selectedUnit = defaultCity) {
+  return {
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    unit: selectedUnit,
+    available: true,
+  };
+}
 
 async function parseRequest(path, options = {}) {
   const { method = 'GET', body } = options;
@@ -72,24 +86,33 @@ async function loadWeatherForCity(cityKey) {
 
 export default function Home() {
   const [menuItems, setMenuItems] = useState([]);
-  const [formData, setFormData] = useState(emptyForm);
+  const [formData, setFormData] = useState(() => createEmptyForm(defaultCity));
   const [editingId, setEditingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingMenu, setIsLoadingMenu] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [weatherCity, setWeatherCity] = useState('São Paulo, BR');
+  const [weatherCity, setWeatherCity] = useState(defaultCity);
   const [weatherInfo, setWeatherInfo] = useState(null);
   const [weatherMessage, setWeatherMessage] = useState('');
 
+  const filteredItems = useMemo(() => {
+    return menuItems.filter((item) => {
+      if (!item?.unit) {
+        return true;
+      }
+      return item.unit === weatherCity;
+    });
+  }, [menuItems, weatherCity]);
+
   const sortedItems = useMemo(() => {
-    return [...menuItems].sort((a, b) => {
+    return [...filteredItems].sort((a, b) => {
       const nameA = (a.name || '').toLowerCase();
       const nameB = (b.name || '').toLowerCase();
       if (nameA < nameB) return -1;
       if (nameA > nameB) return 1;
       return 0;
     });
-  }, [menuItems]);
+  }, [filteredItems]);
 
   useEffect(() => {
     refreshMenu();
@@ -98,6 +121,15 @@ export default function Home() {
   useEffect(() => {
     refreshWeather(weatherCity);
   }, [weatherCity]);
+
+  useEffect(() => {
+    if (!editingId) {
+      setFormData((previous) => ({
+        ...previous,
+        unit: weatherCity,
+      }));
+    }
+  }, [weatherCity, editingId]);
 
   async function refreshMenu() {
     setIsLoadingMenu(true);
@@ -136,18 +168,29 @@ export default function Home() {
     setStatusMessage('');
     try {
       const priceNumber = Number(formData.price);
-      if (!formData.name.trim()) {
+      const trimmedName = formData.name.trim();
+      const categoryValue = formData.category ? formData.category.trim() : '';
+      const unitValue = formData.unit;
+
+      if (!trimmedName) {
         throw new Error('Informe um nome para o prato.');
       }
       if (Number.isNaN(priceNumber) || priceNumber < 0) {
         throw new Error('Informe um preço válido.');
       }
+      if (!categoryValue) {
+        throw new Error('Selecione uma categoria.');
+      }
+      if (!unitValue) {
+        throw new Error('Selecione a unidade responsável.');
+      }
 
       const payload = {
-        name: formData.name.trim(),
+        name: trimmedName,
         description: formData.description.trim(),
         price: priceNumber,
-        category: formData.category.trim(),
+        category: categoryValue,
+        unit: unitValue,
         available: Boolean(formData.available),
       };
 
@@ -165,7 +208,7 @@ export default function Home() {
         setStatusMessage('Novo item adicionado ao cardápio.');
       }
 
-      setFormData(emptyForm);
+      setFormData(createEmptyForm(weatherCity));
       setEditingId(null);
       await refreshMenu();
     } catch (error) {
@@ -181,6 +224,7 @@ export default function Home() {
       description: item.description || '',
       price: item.price != null ? String(item.price) : '',
       category: item.category || '',
+      unit: item.unit || weatherCity,
       available: item.available !== false,
     });
     setEditingId(item.objectId);
@@ -206,7 +250,7 @@ export default function Home() {
 
   function handleCancelEdit() {
     setEditingId(null);
-    setFormData(emptyForm);
+    setFormData(createEmptyForm(weatherCity));
     setStatusMessage('Edição cancelada.');
   }
 
@@ -226,13 +270,13 @@ export default function Home() {
   }
 
   const totalAvailable = useMemo(() => {
-    return menuItems.reduce((total, item) => {
+    return filteredItems.reduce((total, item) => {
       if (item.available !== false) {
         return total + 1;
       }
       return total;
     }, 0);
-  }, [menuItems]);
+  }, [filteredItems]);
 
   return (
     <div>
@@ -251,7 +295,7 @@ export default function Home() {
           value={weatherCity}
           onChange={(event) => setWeatherCity(event.target.value)}
         >
-          {Object.keys(weatherLocations).map((city) => (
+          {locationOptions.map((city) => (
             <option key={city} value={city}>
               {city}
             </option>
@@ -301,13 +345,36 @@ export default function Home() {
             />
           </div>
           <div>
+            <label htmlFor="unit">Unidade</label>
+            <select
+              id="unit"
+              value={formData.unit}
+              onChange={(event) => updateForm('unit', event.target.value)}
+            >
+              {locationOptions.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label htmlFor="category">Categoria</label>
-            <input
+            <select
               id="category"
               value={formData.category}
               onChange={(event) => updateForm('category', event.target.value)}
-              placeholder="Entrada, prato principal, sobremesa..."
-            />
+            >
+              <option value="">Selecione uma categoria</option>
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+              {formData.category && !categoryOptions.includes(formData.category) && (
+                <option value={formData.category}>{formData.category}</option>
+              )}
+            </select>
           </div>
           <div>
             <label htmlFor="available">Disponível para venda?</label>
@@ -336,7 +403,7 @@ export default function Home() {
       <section>
         <h2>Cardápio cadastrado</h2>
         <p>
-          Total de pratos: {menuItems.length} | Disponíveis para venda: {totalAvailable}
+          Total de pratos na unidade selecionada: {sortedItems.length} | Disponíveis para venda: {totalAvailable}
         </p>
         <button type="button" onClick={refreshMenu} disabled={isLoadingMenu}>
           Atualizar lista
@@ -344,7 +411,9 @@ export default function Home() {
         {statusMessage && <p>{statusMessage}</p>}
         {isLoadingMenu && <p>Carregando itens...</p>}
         {!isLoadingMenu && sortedItems.length === 0 && (
-          <p>Nenhum prato cadastrado até o momento. Utilize o formulário para adicionar novos pratos.</p>
+          <p>
+            Nenhum prato cadastrado para {weatherCity}. Utilize o formulário para adicionar novos pratos.
+          </p>
         )}
         {!isLoadingMenu && sortedItems.length > 0 && (
           <table>
@@ -354,6 +423,7 @@ export default function Home() {
                 <th>Descrição</th>
                 <th>Preço</th>
                 <th>Categoria</th>
+                <th>Unidade</th>
                 <th>Disponível</th>
                 <th>Ações</th>
               </tr>
@@ -372,6 +442,7 @@ export default function Home() {
                       : '—'}
                   </td>
                   <td>{item.category || '—'}</td>
+                  <td>{item.unit || '—'}</td>
                   <td>{item.available !== false ? 'Sim' : 'Não'}</td>
                   <td>
                     <button type="button" onClick={() => handleEdit(item)}>
