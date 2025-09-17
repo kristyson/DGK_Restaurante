@@ -13,8 +13,10 @@ const weatherLocations = {
   'Jaboatão dos Guararapes - PE': { latitude: -8.145843, longitude: -35.1651605 },
 };
 
-const locationOptions = Object.keys(weatherLocations);
+const unitOptions = Object.keys(weatherLocations);
+const locationOptions = ['TODOS', ...unitOptions];
 const defaultCity = locationOptions[0];
+const defaultUnit = unitOptions[0];
 
 const categoryOptions = [
   'Entrada',
@@ -24,7 +26,7 @@ const categoryOptions = [
   'Promoção',
 ];
 
-function createEmptyForm(selectedUnit = defaultCity) {
+function createEmptyForm(selectedUnit = defaultUnit) {
   return {
     name: '',
     description: '',
@@ -32,6 +34,7 @@ function createEmptyForm(selectedUnit = defaultCity) {
     category: '',
     unit: selectedUnit,
     available: true,
+    applyAllUnits: false,
   };
 }
 
@@ -86,7 +89,7 @@ async function loadWeatherForCity(cityKey) {
 
 export default function Home() {
   const [menuItems, setMenuItems] = useState([]);
-  const [formData, setFormData] = useState(() => createEmptyForm(defaultCity));
+  const [formData, setFormData] = useState(() => createEmptyForm(defaultUnit));
   const [editingId, setEditingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingMenu, setIsLoadingMenu] = useState(false);
@@ -94,15 +97,70 @@ export default function Home() {
   const [weatherCity, setWeatherCity] = useState(defaultCity);
   const [weatherInfo, setWeatherInfo] = useState(null);
   const [weatherMessage, setWeatherMessage] = useState('');
+  const [filters, setFilters] = useState({
+    name: '',
+    category: 'TODAS',
+    availability: 'TODOS',
+    minPrice: '',
+    maxPrice: '',
+  });
+
+  const selectableCategories = useMemo(() => {
+    const combined = new Set(categoryOptions);
+    menuItems.forEach((item) => {
+      if (item?.category) {
+        combined.add(item.category);
+      }
+    });
+    return Array.from(combined);
+  }, [menuItems]);
 
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
-      if (!item?.unit) {
-        return true;
+      if (weatherCity !== 'TODOS' && item?.unit !== weatherCity) {
+        return false;
       }
-      return item.unit === weatherCity;
+
+      const normalizedName = filters.name.trim().toLowerCase();
+      if (normalizedName && !(item.name || '').toLowerCase().includes(normalizedName)) {
+        return false;
+      }
+
+      if (filters.category !== 'TODAS' && item.category !== filters.category) {
+        return false;
+      }
+
+      if (filters.availability !== 'TODOS') {
+        const isAvailable = item.available !== false;
+        if (filters.availability === 'DISPONIVEL' && !isAvailable) {
+          return false;
+        }
+        if (filters.availability === 'INDISPONIVEL' && isAvailable) {
+          return false;
+        }
+      }
+
+      if (filters.minPrice !== '') {
+        const minPriceNumber = Number(filters.minPrice);
+        if (!Number.isNaN(minPriceNumber)) {
+          if (typeof item.price !== 'number' || item.price < minPriceNumber) {
+            return false;
+          }
+        }
+      }
+
+      if (filters.maxPrice !== '') {
+        const maxPriceNumber = Number(filters.maxPrice);
+        if (!Number.isNaN(maxPriceNumber)) {
+          if (typeof item.price !== 'number' || item.price > maxPriceNumber) {
+            return false;
+          }
+        }
+      }
+
+      return true;
     });
-  }, [menuItems, weatherCity]);
+  }, [menuItems, weatherCity, filters]);
 
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
@@ -126,7 +184,7 @@ export default function Home() {
     if (!editingId) {
       setFormData((previous) => ({
         ...previous,
-        unit: weatherCity,
+        unit: unitOptions.includes(weatherCity) ? weatherCity : defaultUnit,
       }));
     }
   }, [weatherCity, editingId]);
@@ -145,6 +203,12 @@ export default function Home() {
   }
 
   async function refreshWeather(cityKey) {
+    if (cityKey === 'TODOS') {
+      setWeatherInfo(null);
+      setWeatherMessage('Selecione uma cidade específica para ver o clima.');
+      return;
+    }
+
     setWeatherMessage('');
     try {
       const weather = await loadWeatherForCity(cityKey);
@@ -181,7 +245,7 @@ export default function Home() {
       if (!categoryValue) {
         throw new Error('Selecione uma categoria.');
       }
-      if (!unitValue) {
+      if (!formData.applyAllUnits && !unitValue) {
         throw new Error('Selecione a unidade responsável.');
       }
 
@@ -190,25 +254,31 @@ export default function Home() {
         description: formData.description.trim(),
         price: priceNumber,
         category: categoryValue,
-        unit: unitValue,
         available: Boolean(formData.available),
       };
 
       if (editingId) {
+        payload.unit = unitValue;
         await parseRequest(`/classes/${MENU_CLASS}/${editingId}`, {
           method: 'PUT',
           body: payload,
         });
         setStatusMessage('Item atualizado com sucesso.');
       } else {
-        await parseRequest(`/classes/${MENU_CLASS}`, {
-          method: 'POST',
-          body: payload,
-        });
+        const targetUnits = formData.applyAllUnits ? unitOptions : [unitValue];
+        for (const unit of targetUnits) {
+          await parseRequest(`/classes/${MENU_CLASS}`, {
+            method: 'POST',
+            body: {
+              ...payload,
+              unit,
+            },
+          });
+        }
         setStatusMessage('Novo item adicionado ao cardápio.');
       }
 
-      setFormData(createEmptyForm(weatherCity));
+      setFormData(createEmptyForm(unitOptions.includes(weatherCity) ? weatherCity : defaultUnit));
       setEditingId(null);
       await refreshMenu();
     } catch (error) {
@@ -224,8 +294,9 @@ export default function Home() {
       description: item.description || '',
       price: item.price != null ? String(item.price) : '',
       category: item.category || '',
-      unit: item.unit || weatherCity,
+      unit: item.unit || (unitOptions.includes(weatherCity) ? weatherCity : defaultUnit),
       available: item.available !== false,
+      applyAllUnits: false,
     });
     setEditingId(item.objectId);
     setStatusMessage('Editando item selecionado.');
@@ -250,7 +321,7 @@ export default function Home() {
 
   function handleCancelEdit() {
     setEditingId(null);
-    setFormData(createEmptyForm(weatherCity));
+    setFormData(createEmptyForm(unitOptions.includes(weatherCity) ? weatherCity : defaultUnit));
     setStatusMessage('Edição cancelada.');
   }
 
@@ -277,6 +348,13 @@ export default function Home() {
       return total;
     }, 0);
   }, [filteredItems]);
+
+  function updateFilter(field, value) {
+    setFilters((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  }
 
   return (
     <div>
@@ -350,8 +428,9 @@ export default function Home() {
               id="unit"
               value={formData.unit}
               onChange={(event) => updateForm('unit', event.target.value)}
+              disabled={formData.applyAllUnits}
             >
-              {locationOptions.map((unit) => (
+              {unitOptions.map((unit) => (
                 <option key={unit} value={unit}>
                   {unit}
                 </option>
@@ -366,14 +445,11 @@ export default function Home() {
               onChange={(event) => updateForm('category', event.target.value)}
             >
               <option value="">Selecione uma categoria</option>
-              {categoryOptions.map((category) => (
+              {selectableCategories.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
               ))}
-              {formData.category && !categoryOptions.includes(formData.category) && (
-                <option value={formData.category}>{formData.category}</option>
-              )}
             </select>
           </div>
           <div>
@@ -387,6 +463,17 @@ export default function Home() {
               <option value="false">Não</option>
             </select>
           </div>
+          {!editingId && (
+            <div>
+              <label htmlFor="apply-all-units">Adicionar em todas as unidades?</label>
+              <input
+                id="apply-all-units"
+                type="checkbox"
+                checked={formData.applyAllUnits}
+                onChange={(event) => updateForm('applyAllUnits', event.target.checked)}
+              />
+            </div>
+          )}
           <div>
             <button type="submit" disabled={isSaving}>
               {editingId ? 'Salvar alterações' : 'Adicionar prato'}
@@ -403,17 +490,75 @@ export default function Home() {
       <section>
         <h2>Cardápio cadastrado</h2>
         <p>
-          Total de pratos na unidade selecionada: {sortedItems.length} | Disponíveis para venda: {totalAvailable}
+          Total de pratos exibidos: {sortedItems.length} | Disponíveis para venda: {totalAvailable}
         </p>
+        <div>
+          <div>
+            <label htmlFor="filter-name">Filtrar por nome</label>
+            <input
+              id="filter-name"
+              value={filters.name}
+              onChange={(event) => updateFilter('name', event.target.value)}
+              placeholder="Buscar por nome"
+            />
+          </div>
+          <div>
+            <label htmlFor="filter-category">Filtrar por categoria</label>
+            <select
+              id="filter-category"
+              value={filters.category}
+              onChange={(event) => updateFilter('category', event.target.value)}
+            >
+              <option value="TODAS">Todas</option>
+              {selectableCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="filter-availability">Disponibilidade</label>
+            <select
+              id="filter-availability"
+              value={filters.availability}
+              onChange={(event) => updateFilter('availability', event.target.value)}
+            >
+              <option value="TODOS">Todos</option>
+              <option value="DISPONIVEL">Disponíveis</option>
+              <option value="INDISPONIVEL">Indisponíveis</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="filter-min-price">Preço mínimo</label>
+            <input
+              id="filter-min-price"
+              type="number"
+              step="0.01"
+              value={filters.minPrice}
+              onChange={(event) => updateFilter('minPrice', event.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label htmlFor="filter-max-price">Preço máximo</label>
+            <input
+              id="filter-max-price"
+              type="number"
+              step="0.01"
+              value={filters.maxPrice}
+              onChange={(event) => updateFilter('maxPrice', event.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+        </div>
         <button type="button" onClick={refreshMenu} disabled={isLoadingMenu}>
           Atualizar lista
         </button>
         {statusMessage && <p>{statusMessage}</p>}
         {isLoadingMenu && <p>Carregando itens...</p>}
         {!isLoadingMenu && sortedItems.length === 0 && (
-          <p>
-            Nenhum prato cadastrado para {weatherCity}. Utilize o formulário para adicionar novos pratos.
-          </p>
+          <p>Nenhum prato encontrado para os filtros selecionados.</p>
         )}
         {!isLoadingMenu && sortedItems.length > 0 && (
           <table>
