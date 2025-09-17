@@ -104,6 +104,7 @@ export default function Home() {
     minPrice: '',
     maxPrice: '',
   });
+  const [sortConfig, setSortConfig] = useState({ key: 'unit', direction: 'asc' });
 
   const selectableCategories = useMemo(() => {
     const combined = new Set(categoryOptions);
@@ -163,14 +164,32 @@ export default function Home() {
   }, [menuItems, weatherCity, filters]);
 
   const sortedItems = useMemo(() => {
-    return [...filteredItems].sort((a, b) => {
-      const nameA = (a.name || '').toLowerCase();
-      const nameB = (b.name || '').toLowerCase();
-      if (nameA < nameB) return -1;
-      if (nameA > nameB) return 1;
+    const items = [...filteredItems];
+    const { key, direction } = sortConfig;
+
+    items.sort((a, b) => {
+      let valueA;
+      let valueB;
+
+      if (key === 'price') {
+        valueA = typeof a.price === 'number' ? a.price : Number.NEGATIVE_INFINITY;
+        valueB = typeof b.price === 'number' ? b.price : Number.NEGATIVE_INFINITY;
+      } else {
+        valueA = (a[key] || '').toString().toLowerCase();
+        valueB = (b[key] || '').toString().toLowerCase();
+      }
+
+      if (valueA < valueB) {
+        return direction === 'asc' ? -1 : 1;
+      }
+      if (valueA > valueB) {
+        return direction === 'asc' ? 1 : -1;
+      }
       return 0;
     });
-  }, [filteredItems]);
+
+    return items;
+  }, [filteredItems, sortConfig]);
 
   useEffect(() => {
     refreshMenu();
@@ -354,6 +373,29 @@ export default function Home() {
       ...previous,
       [field]: value,
     }));
+  }
+
+  function toggleSort(key) {
+    setSortConfig((previous) => {
+      if (previous.key === key) {
+        return {
+          key,
+          direction: previous.direction === 'asc' ? 'desc' : 'asc',
+        };
+      }
+
+      return {
+        key,
+        direction: 'asc',
+      };
+    });
+  }
+
+  function renderSortIndicator(columnKey) {
+    if (sortConfig.key !== columnKey) {
+      return null;
+    }
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
   }
 
   return (
@@ -564,11 +606,26 @@ export default function Home() {
           <table>
             <thead>
               <tr>
-                <th>Nome</th>
+                <th>
+                  <button type="button" onClick={() => toggleSort('name')}>
+                    Nome
+                    {renderSortIndicator('name')}
+                  </button>
+                </th>
                 <th>Descrição</th>
-                <th>Preço</th>
+                <th>
+                  <button type="button" onClick={() => toggleSort('price')}>
+                    Preço
+                    {renderSortIndicator('price')}
+                  </button>
+                </th>
                 <th>Categoria</th>
-                <th>Unidade</th>
+                <th>
+                  <button type="button" onClick={() => toggleSort('unit')}>
+                    Unidade
+                    {renderSortIndicator('unit')}
+                  </button>
+                </th>
                 <th>Disponível</th>
                 <th>Ações</th>
               </tr>
