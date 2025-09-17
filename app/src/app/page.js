@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import styles from './page.module.css';
+
 const APP_ID = 'VXY7L2vhMJd5FlohOKs8m4LTS9N9a2IbdCTtPrlM';
 const CLIENT_KEY = 'zQrntobRZgMVspU7J7lk728NEytCVkcJ90pfjSb9';
 const PARSE_BASE_URL = 'https://parseapi.back4app.com';
@@ -399,275 +401,323 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <header>
-        <h1>DGK Restaurante - Gestão do Cardápio</h1>
-        <p>
-          Faça o controle completo dos pratos e acompanhe o clima para planejar promoções e eventos especiais.
-        </p>
-      </header>
-
-      <section>
-        <h2>Condições do tempo</h2>
-        <label htmlFor="weather-city">Escolha uma cidade:</label>
-        <select
-          id="weather-city"
-          value={weatherCity}
-          onChange={(event) => setWeatherCity(event.target.value)}
-        >
-          {locationOptions.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
-        {weatherInfo && (
-          <div>
-            <p>
-              Clima em {weatherCity}: {weatherInfo.temperature}°C, vento {weatherInfo.windspeed} km/h.
+    <div className={styles.page}>
+      <header className={styles.hero}>
+        <div className={styles.container}>
+          <div className={styles.heroContent}>
+            <p className={styles.heroKicker}>DGK Restaurante</p>
+            <h1 className={styles.heroTitle}>Gestão do cardápio com visão em tempo real</h1>
+            <p className={styles.heroSubtitle}>
+              Faça o controle completo dos pratos, acompanhe o clima para planejar promoções e organize a operação das
+              unidades com praticidade.
             </p>
-            <p>Última atualização: {new Date(weatherInfo.time).toLocaleString()}</p>
-          </div>
-        )}
-        {weatherMessage && <p>{weatherMessage}</p>}
-      </section>
-
-      <section>
-        <h2>{editingId ? 'Editar prato' : 'Adicionar novo prato'}</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="name">Nome</label>
-            <input
-              id="name"
-              value={formData.name}
-              onChange={(event) => updateForm('name', event.target.value)}
-              placeholder="Ex: Moqueca de peixe"
-            />
-          </div>
-          <div>
-            <label htmlFor="description">Descrição</label>
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(event) => updateForm('description', event.target.value)}
-              placeholder="Detalhes sobre o prato, ingredientes e destaques"
-            />
-          </div>
-          <div>
-            <label htmlFor="price">Preço (R$)</label>
-            <input
-              id="price"
-              type="number"
-              step="0.01"
-              value={formData.price}
-              onChange={(event) => updateForm('price', event.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label htmlFor="unit">Unidade</label>
-            <select
-              id="unit"
-              value={formData.unit}
-              onChange={(event) => updateForm('unit', event.target.value)}
-              disabled={formData.applyAllUnits}
-            >
-              {unitOptions.map((unit) => (
-                <option key={unit} value={unit}>
-                  {unit}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="category">Categoria</label>
-            <select
-              id="category"
-              value={formData.category}
-              onChange={(event) => updateForm('category', event.target.value)}
-            >
-              <option value="">Selecione uma categoria</option>
-              {selectableCategories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="available">Disponível para venda?</label>
-            <select
-              id="available"
-              value={formData.available ? 'true' : 'false'}
-              onChange={(event) => updateForm('available', event.target.value === 'true')}
-            >
-              <option value="true">Sim</option>
-              <option value="false">Não</option>
-            </select>
-          </div>
-          {!editingId && (
-            <div>
-              <label htmlFor="apply-all-units">Adicionar em todas as unidades?</label>
-              <input
-                id="apply-all-units"
-                type="checkbox"
-                checked={formData.applyAllUnits}
-                onChange={(event) => updateForm('applyAllUnits', event.target.checked)}
-              />
+            <div className={styles.heroStats}>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Pratos ativos</span>
+                <strong className={styles.statValue}>{totalAvailable}</strong>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Itens exibidos</span>
+                <strong className={styles.statValue}>{sortedItems.length}</strong>
+              </div>
             </div>
-          )}
-          <div>
-            <button type="submit" disabled={isSaving}>
-              {editingId ? 'Salvar alterações' : 'Adicionar prato'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={handleCancelEdit} disabled={isSaving}>
-                Cancelar edição
-              </button>
-            )}
-          </div>
-        </form>
-      </section>
-
-      <section>
-        <h2>Cardápio cadastrado</h2>
-        <p>
-          Total de pratos exibidos: {sortedItems.length} | Disponíveis para venda: {totalAvailable}
-        </p>
-        <div>
-          <div>
-            <label htmlFor="filter-name">Filtrar por nome</label>
-            <input
-              id="filter-name"
-              value={filters.name}
-              onChange={(event) => updateFilter('name', event.target.value)}
-              placeholder="Buscar por nome"
-            />
-          </div>
-          <div>
-            <label htmlFor="filter-category">Filtrar por categoria</label>
-            <select
-              id="filter-category"
-              value={filters.category}
-              onChange={(event) => updateFilter('category', event.target.value)}
-            >
-              <option value="TODAS">Todas</option>
-              {selectableCategories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="filter-availability">Disponibilidade</label>
-            <select
-              id="filter-availability"
-              value={filters.availability}
-              onChange={(event) => updateFilter('availability', event.target.value)}
-            >
-              <option value="TODOS">Todos</option>
-              <option value="DISPONIVEL">Disponíveis</option>
-              <option value="INDISPONIVEL">Indisponíveis</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="filter-min-price">Preço mínimo</label>
-            <input
-              id="filter-min-price"
-              type="number"
-              step="0.01"
-              value={filters.minPrice}
-              onChange={(event) => updateFilter('minPrice', event.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label htmlFor="filter-max-price">Preço máximo</label>
-            <input
-              id="filter-max-price"
-              type="number"
-              step="0.01"
-              value={filters.maxPrice}
-              onChange={(event) => updateFilter('maxPrice', event.target.value)}
-              placeholder="0.00"
-            />
           </div>
         </div>
-        <button type="button" onClick={refreshMenu} disabled={isLoadingMenu}>
-          Atualizar lista
-        </button>
-        {statusMessage && <p>{statusMessage}</p>}
-        {isLoadingMenu && <p>Carregando itens...</p>}
-        {!isLoadingMenu && sortedItems.length === 0 && (
-          <p>Nenhum prato encontrado para os filtros selecionados.</p>
-        )}
-        {!isLoadingMenu && sortedItems.length > 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  <button type="button" onClick={() => toggleSort('name')}>
-                    Nome
-                    {renderSortIndicator('name')}
-                  </button>
-                </th>
-                <th>Descrição</th>
-                <th>
-                  <button type="button" onClick={() => toggleSort('price')}>
-                    Preço
-                    {renderSortIndicator('price')}
-                  </button>
-                </th>
-                <th>Categoria</th>
-                <th>
-                  <button type="button" onClick={() => toggleSort('unit')}>
-                    Unidade
-                    {renderSortIndicator('unit')}
-                  </button>
-                </th>
-                <th>Disponível</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedItems.map((item) => (
-                <tr key={item.objectId}>
-                  <td>{item.name}</td>
-                  <td>{item.description || '—'}</td>
-                  <td>
-                    {typeof item.price === 'number'
-                      ? item.price.toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })
-                      : '—'}
-                  </td>
-                  <td>{item.category || '—'}</td>
-                  <td>{item.unit || '—'}</td>
-                  <td>{item.available !== false ? 'Sim' : 'Não'}</td>
-                  <td>
-                    <button type="button" onClick={() => handleEdit(item)}>
-                      Editar
-                    </button>
-                    <button type="button" onClick={() => handleToggleAvailability(item)}>
-                      Alternar disponibilidade
-                    </button>
-                    <button type="button" onClick={() => handleDelete(item)}>
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+      </header>
 
-      <footer>
-        <p>
-          As alterações são salvas diretamente no Back4App, permitindo que toda a equipe acompanhe o cardápio em tempo real.
-        </p>
+      <main>
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <h2>Condições do tempo</h2>
+              <p>Use o clima local para criar campanhas e ajustar o cardápio de cada unidade.</p>
+            </div>
+            <div className={styles.weatherPanel}>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="weather-city">Cidade</label>
+                <select
+                  id="weather-city"
+                  value={weatherCity}
+                  onChange={(event) => setWeatherCity(event.target.value)}
+                >
+                  {locationOptions.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {weatherInfo && (
+                <div className={styles.weatherInfo}>
+                  <p className={styles.weatherSummary}>
+                    {weatherInfo.temperature}°C · vento {weatherInfo.windspeed} km/h em {weatherCity}
+                  </p>
+                  <p className={styles.weatherTime}>Atualizado em {new Date(weatherInfo.time).toLocaleString()}</p>
+                </div>
+              )}
+              {weatherMessage && <p className={styles.feedback}>{weatherMessage}</p>}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <h2>{editingId ? 'Editar prato' : 'Adicionar novo prato'}</h2>
+              <p>Preencha os detalhes do prato para manter o cardápio sempre atualizado.</p>
+            </div>
+            <form className={styles.form} onSubmit={handleSubmit}>
+              <div className={styles.formGrid}>
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="name">Nome</label>
+                  <input
+                    id="name"
+                    value={formData.name}
+                    onChange={(event) => updateForm('name', event.target.value)}
+                    placeholder="Ex: Moqueca de peixe"
+                  />
+                </div>
+                <div className={`${styles.fieldGroup} ${styles.fieldWide}`}>
+                  <label htmlFor="description">Descrição</label>
+                  <textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(event) => updateForm('description', event.target.value)}
+                    placeholder="Detalhes sobre o prato, ingredientes e destaques"
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="price">Preço (R$)</label>
+                  <input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(event) => updateForm('price', event.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="unit">Unidade</label>
+                  <select
+                    id="unit"
+                    value={formData.unit}
+                    onChange={(event) => updateForm('unit', event.target.value)}
+                    disabled={formData.applyAllUnits}
+                  >
+                    {unitOptions.map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="category">Categoria</label>
+                  <select
+                    id="category"
+                    value={formData.category}
+                    onChange={(event) => updateForm('category', event.target.value)}
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {selectableCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label htmlFor="available">Disponível para venda?</label>
+                  <select
+                    id="available"
+                    value={formData.available ? 'true' : 'false'}
+                    onChange={(event) => updateForm('available', event.target.value === 'true')}
+                  >
+                    <option value="true">Sim</option>
+                    <option value="false">Não</option>
+                  </select>
+                </div>
+                {!editingId && (
+                  <label className={`${styles.fieldGroup} ${styles.checkboxField}`} htmlFor="apply-all-units">
+                    <input
+                      id="apply-all-units"
+                      type="checkbox"
+                      checked={formData.applyAllUnits}
+                      onChange={(event) => updateForm('applyAllUnits', event.target.checked)}
+                    />
+                    <span>Adicionar em todas as unidades</span>
+                  </label>
+                )}
+              </div>
+              <div className={styles.formActions}>
+                <button className={styles.primaryButton} type="submit" disabled={isSaving}>
+                  {editingId ? 'Salvar alterações' : 'Adicionar prato'}
+                </button>
+                {editingId && (
+                  <button className={styles.secondaryButton} type="button" onClick={handleCancelEdit} disabled={isSaving}>
+                    Cancelar edição
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.container}>
+            <div className={styles.sectionHeader}>
+              <h2>Cardápio cadastrado</h2>
+              <p>
+                Total de pratos: {menuItems.length} · Disponíveis para venda: {totalAvailable}
+              </p>
+            </div>
+            <div className={styles.filtersPanel}>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="filter-name">Nome</label>
+                <input
+                  id="filter-name"
+                  value={filters.name}
+                  onChange={(event) => updateFilter('name', event.target.value)}
+                  placeholder="Buscar por nome"
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="filter-category">Categoria</label>
+                <select
+                  id="filter-category"
+                  value={filters.category}
+                  onChange={(event) => updateFilter('category', event.target.value)}
+                >
+                  <option value="TODAS">Todas</option>
+                  {selectableCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="filter-availability">Disponibilidade</label>
+                <select
+                  id="filter-availability"
+                  value={filters.availability}
+                  onChange={(event) => updateFilter('availability', event.target.value)}
+                >
+                  <option value="TODOS">Todos</option>
+                  <option value="DISPONIVEL">Disponíveis</option>
+                  <option value="INDISPONIVEL">Indisponíveis</option>
+                </select>
+              </div>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="filter-min-price">Preço mínimo</label>
+                <input
+                  id="filter-min-price"
+                  type="number"
+                  step="0.01"
+                  value={filters.minPrice}
+                  onChange={(event) => updateFilter('minPrice', event.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label htmlFor="filter-max-price">Preço máximo</label>
+                <input
+                  id="filter-max-price"
+                  type="number"
+                  step="0.01"
+                  value={filters.maxPrice}
+                  onChange={(event) => updateFilter('maxPrice', event.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <button
+                className={`${styles.secondaryButton} ${styles.refreshButton}`}
+                type="button"
+                onClick={refreshMenu}
+                disabled={isLoadingMenu}
+              >
+                Atualizar lista
+              </button>
+            </div>
+            {statusMessage && <p className={styles.feedback}>{statusMessage}</p>}
+            {isLoadingMenu && <p className={styles.feedback}>Carregando itens...</p>}
+            {!isLoadingMenu && sortedItems.length === 0 && (
+              <p className={styles.feedback}>Nenhum prato encontrado para os filtros selecionados.</p>
+            )}
+            {!isLoadingMenu && sortedItems.length > 0 && (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>
+                        <button type="button" onClick={() => toggleSort('name')}>
+                          Nome
+                          {renderSortIndicator('name')}
+                        </button>
+                      </th>
+                      <th>Descrição</th>
+                      <th>
+                        <button type="button" onClick={() => toggleSort('price')}>
+                          Preço
+                          {renderSortIndicator('price')}
+                        </button>
+                      </th>
+                      <th>Categoria</th>
+                      <th>
+                        <button type="button" onClick={() => toggleSort('unit')}>
+                          Unidade
+                          {renderSortIndicator('unit')}
+                        </button>
+                      </th>
+                      <th>Disponível</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedItems.map((item) => (
+                      <tr key={item.objectId}>
+                        <td>{item.name}</td>
+                        <td>{item.description || '—'}</td>
+                        <td>
+                          {typeof item.price === 'number'
+                            ? item.price.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              })
+                            : '—'}
+                        </td>
+                        <td>{item.category || '—'}</td>
+                        <td>{item.unit || '—'}</td>
+                        <td>{item.available !== false ? 'Sim' : 'Não'}</td>
+                        <td className={styles.tableActions}>
+                          <button type="button" onClick={() => handleEdit(item)}>
+                            Editar
+                          </button>
+                          <button type="button" onClick={() => handleToggleAvailability(item)}>
+                            Alternar disponibilidade
+                          </button>
+                          <button type="button" onClick={() => handleDelete(item)}>
+                            Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <p>
+            As alterações são salvas diretamente no Back4App, permitindo que toda a equipe acompanhe o cardápio em tempo
+            real.
+          </p>
+        </div>
       </footer>
     </div>
   );
