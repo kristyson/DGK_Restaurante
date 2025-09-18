@@ -1,167 +1,423 @@
 .page {
-  --gray-rgb: 0, 0, 0;
-  --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
-  --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
+  background: radial-gradient(circle at top, rgba(255, 245, 225, 0.8) 0%, rgba(237, 227, 205, 0.9) 45%, rgba(218, 207, 182, 0.95) 100%);
+  min-height: 100vh;
+  color: var(--text-primary);
+  padding-bottom: 6rem;
+}
 
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
+.container {
+  width: min(1120px, 100% - 48px);
+  margin: 0 auto;
+}
 
+.hero {
+  position: relative;
+  padding: 4.5rem 0;
+  margin-bottom: 3rem;
+  border-radius: 2.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(77, 61, 33, 0.15);
+  background: linear-gradient(135deg, rgba(255, 244, 226, 0.92), rgba(245, 221, 188, 0.9));
+  box-shadow: 0 35px 65px rgba(85, 61, 33, 0.18);
+  color: var(--text-primary);
+}
+
+.heroContent {
   display: grid;
-  grid-template-rows: 20px 1fr 20px;
-  align-items: center;
-  justify-items: center;
-  min-height: 100svh;
-  padding: 80px;
-  gap: 64px;
-  font-family: var(--font-geist-sans);
+  gap: 1.5rem;
+  align-items: start;
+  position: relative;
+  z-index: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  .page {
-    --gray-rgb: 255, 255, 255;
-    --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
-    --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-  }
+.heroKicker {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  font-size: 0.75rem;
+  color: var(--accent-dark);
 }
 
-.main {
+.heroTitle {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-family: 'Playfair Display', var(--font-geist-sans), serif;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.heroSubtitle {
+  max-width: 680px;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+}
+
+.heroStats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(77, 61, 33, 0.12);
+  border-radius: 1.25rem;
+  padding: 1.1rem 1.5rem;
+  min-width: 200px;
+  box-shadow: 0 18px 40px rgba(85, 61, 33, 0.12);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+}
+
+.statValue {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 2.25rem;
+  font-weight: 600;
+  font-family: 'Playfair Display', var(--font-geist-sans), serif;
+  color: var(--text-primary);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 20% 20%, rgba(240, 200, 140, 0.18) 0%, transparent 55%), radial-gradient(circle at 80% 10%, rgba(206, 160, 96, 0.16) 0%, transparent 60%), radial-gradient(circle at 50% 90%, rgba(220, 180, 120, 0.18) 0%, transparent 58%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.section {
+  padding: 3rem 0;
+}
+
+.sectionHeader {
+  margin-bottom: 1.75rem;
+}
+
+.sectionHeader h2 {
+  font-family: 'Playfair Display', var(--font-geist-sans), serif;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sectionHeader p {
+  margin-top: 0.5rem;
+  max-width: 640px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.weatherPanel {
+  background: var(--surface);
+  border: 1px solid rgba(66, 61, 49, 0.12);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  display: grid;
+  gap: 1.25rem;
+  box-shadow: 0 20px 45px rgba(40, 37, 29, 0.08);
+  border-top: 6px solid var(--accent);
+}
+
+.fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  grid-row-start: 2;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
-.main ol {
-  font-family: var(--font-geist-mono);
-  padding-left: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 24px;
-  letter-spacing: -0.01em;
-  list-style-position: inside;
+.fieldGroup label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
-.main li:not(:last-of-type) {
-  margin-bottom: 8px;
+.fieldGroup input,
+.fieldGroup select,
+.fieldGroup textarea {
+  border: 1px solid rgba(66, 61, 49, 0.12);
+  border-radius: 0.875rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.main code {
-  font-family: inherit;
-  background: var(--gray-alpha-100);
-  padding: 2px 4px;
-  border-radius: 4px;
+.fieldGroup textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.fieldGroup input:focus,
+.fieldGroup select:focus,
+.fieldGroup textarea:focus {
+  outline: none;
+  border-color: rgba(66, 61, 49, 0.4);
+  box-shadow: 0 0 0 4px rgba(98, 85, 60, 0.15);
+}
+
+.weatherInfo {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-primary);
+}
+
+.weatherSummary {
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
-.ctas {
-  display: flex;
-  gap: 16px;
+.weatherTime {
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
-.ctas a {
-  appearance: none;
-  border-radius: 128px;
-  height: 48px;
-  padding: 0 20px;
-  border: 1px solid transparent;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  line-height: 20px;
+.feedback {
+  margin-top: 1rem;
+  color: var(--accent-dark);
   font-weight: 500;
 }
 
-a.primary {
-  background: var(--foreground);
-  color: var(--background);
-  gap: 8px;
+.form {
+  background: var(--surface);
+  border-radius: 1.75rem;
+  padding: 2.25rem;
+  border: 1px solid rgba(66, 61, 49, 0.12);
+  box-shadow: 0 25px 55px rgba(40, 37, 29, 0.08);
+  display: grid;
+  gap: 2rem;
+  border-top: 6px solid var(--accent);
 }
 
-a.secondary {
-  border-color: var(--gray-alpha-200);
-  min-width: 158px;
+.formGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.checkboxField {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  background: rgba(66, 61, 49, 0.05);
+}
+
+.checkboxField input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+.checkboxField span {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.primaryButton {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 15px 30px rgba(98, 85, 60, 0.25);
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.primaryButton:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 35px rgba(98, 85, 60, 0.32);
+}
+
+.secondaryButton {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid rgba(66, 61, 49, 0.25);
+}
+
+.secondaryButton:hover {
+  background: rgba(66, 61, 49, 0.08);
+  transform: translateY(-2px);
+}
+
+.filtersPanel {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  background: var(--surface);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  border: 1px solid rgba(66, 61, 49, 0.12);
+  box-shadow: 0 20px 45px rgba(40, 37, 29, 0.08);
+  margin-bottom: 1.75rem;
+  align-items: end;
+  border-top: 6px solid var(--accent);
+}
+
+.refreshButton {
+  justify-self: start;
+}
+
+.tableWrapper {
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(66, 61, 49, 0.12);
+  background: var(--surface);
+  box-shadow: 0 30px 60px rgba(40, 37, 29, 0.1);
+  border-top: 6px solid var(--accent);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table thead {
+  background: rgba(66, 61, 49, 0.08);
+}
+
+.table th,
+.table td {
+  padding: 1.1rem 1.25rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(66, 61, 49, 0.08);
+}
+
+.table th button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+}
+
+.table tbody tr:hover {
+  background: rgba(66, 61, 49, 0.04);
+}
+
+.tableActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tableActions button {
+  border-radius: 999px;
+  border: 1px solid rgba(66, 61, 49, 0.2);
+  background: transparent;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  color: var(--accent-dark);
+}
+
+.tableActions button:hover {
+  background: rgba(66, 61, 49, 0.08);
+  transform: translateY(-1px);
+  color: var(--accent-dark);
 }
 
 .footer {
-  grid-row-start: 3;
-  display: flex;
-  gap: 24px;
+  padding: 3rem 0 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-align: center;
 }
 
-.footer a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.footer img {
-  flex-shrink: 0;
-}
-
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
+@media (max-width: 900px) {
+  .hero {
+    padding: 3.5rem 0;
   }
 
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
+  .form,
+  .weatherPanel,
+  .filtersPanel {
+    padding: 1.5rem;
   }
 
-  .footer a:hover {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkboxField {
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 600px) {
-  .page {
-    padding: 32px;
-    padding-bottom: 80px;
+  .container {
+    width: min(100% - 32px, 520px);
   }
 
-  .main {
-    align-items: center;
-  }
-
-  .main ol {
-    text-align: center;
-  }
-
-  .ctas {
+  .heroStats {
     flex-direction: column;
   }
 
-  .ctas a {
-    font-size: 14px;
-    height: 40px;
-    padding: 0 16px;
+  .formActions {
+    flex-direction: column;
   }
 
-  a.secondary {
-    min-width: auto;
+  .primaryButton,
+  .secondaryButton,
+  .tableActions button {
+    width: 100%;
+    text-align: center;
   }
 
-  .footer {
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
+  .filtersPanel {
+    grid-template-columns: 1fr;
   }
-}
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+  .tableWrapper {
+    border-radius: 1rem;
   }
 }
