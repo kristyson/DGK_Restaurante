@@ -357,11 +357,13 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  color: var(--accent-dark);
 }
 
 .tableActions button:hover {
   background: rgba(66, 61, 49, 0.08);
   transform: translateY(-1px);
+  color: var(--accent-dark);
 }
 
 .footer {

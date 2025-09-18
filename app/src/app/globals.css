@@ -3,22 +3,22 @@
 :root {
   --background: #f4efe3;
   --foreground: #26180c;
-  --surface: rgba(255, 255, 255, 0.82);
+  --surface: rgba(207, 187, 187, 0.82);
   --text-primary: #1c1208;
   --text-muted: #5f4a33;
-  --accent: #b07a37;
-  --accent-dark: #7a4b1f;
+  --accent: #b58a53;
+  --accent-dark: #7a521f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #13110e;
-    --foreground: #f3ede1;
-    --surface: rgba(40, 36, 28, 0.85);
-    --text-primary: #f3ede1;
-    --text-muted: #b6af9c;
+    --background: #f4efe3;
+    --foreground: #26180c;
+    --surface: rgba(207, 198, 187, 0.82);
+    --text-primary: #1c1208;
+    --text-muted: #5f4a33;
     --accent: #b58a53;
-    --accent-dark: #e3c896;
+    --accent-dark: #7a521f;
   }
 }
 
