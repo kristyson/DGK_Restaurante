@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 :root {
-  --background: #dcd4be;
-  --foreground: #2f2a1f;
-  --surface: rgba(255, 255, 255, 0.75);
-  --text-primary: #2f2a1f;
-  --text-muted: #6d6657;
-  --accent: #8f6b3f;
-  --accent-dark: #4d3d21;
+  --background: #f4efe3;
+  --foreground: #26180c;
+  --surface: rgba(255, 255, 255, 0.82);
+  --text-primary: #1c1208;
+  --text-muted: #5f4a33;
+  --accent: #b07a37;
+  --accent-dark: #7a4b1f;
 }
 
 @media (prefers-color-scheme: dark) {
